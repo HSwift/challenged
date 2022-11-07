@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Challenged</title>
+    <style>
+        span{
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body><h2>Challenge Container Distribution Platform</h2>
+<p>To exclude interference between players, this challenge requires a dynamic container. A dynamically generated Flag (format: flag\{[a-zA-Z0-9]{16}\}) exists inside the container. If you complete the challenge, please submit the Flag on this platform in exchange for a real Flag</p>
+<p>To save server resources, this challenge has provided the complete container deployment file, please test locally first, to confirm your method can be stable to obtain Flag. then apply for containers from the platform, each container has a time limit of 5 minutes</p>
+<p>Please note that this platform and all its API open in port 80 are not part of the challenge and please do not make any attack attempts on this platform. Attempted attacks may result in accounts and IP addresses being blocked. If you find a vulnerability in this platform please contact the administrator of this challenge.</p>
+<h2>Login by Team Token</h2>
+<div id="teaminfo">
+    <p>team name: <span class="name"></span></p>
+    <p>container address: <span class="address"></span></p>
+    <p>container start at: <span class="start"></span></p>
+    <p>container end at: <span class="end"></span></p>
+</div>
+<form>
+    <label>Team Token
+        <input id="team_token" type="text">
+    </label>
+    <button type="button" onclick="login()">Submit</button>
+</form>
+<h2>Operate The Container</h2>
+<form>
+    <button type="button" onclick="apply_container()">Apply</button>
+    <button type="button" onclick="remove_container()">Destroy</button>
+</form>
+<h2>Submit Flag</h2>
+<form>
+    <label>Flag
+        <input id="flag" type="text">
+    </label>
+    <button type="button" onclick="submit_flag()">Submit</button>
+    <p id="real_flag"></p>
+</form>
+<script>
+    function info(){
+        fetch("/api/info", {
+            method: "GET",
+            credentials:"include"
+        }).then(function(res){
+            res.json().then(x => {
+                if(res.ok){
+                    const data = x.data
+                    document.querySelector("#teaminfo .name").textContent = data.username
+                    if(data.container != null){
+                        document.querySelector("#teaminfo .address").textContent = location.hostname + ":" + data.container.port
+                        const time = new Date(data.container.time)
+                        document.querySelector("#teaminfo .start").textContent = time.toLocaleTimeString()
+                        const end = new Date(time.getTime() + 5 * 60 * 1000)
+                        document.querySelector("#teaminfo .end").textContent = end.toLocaleTimeString()
+                    }else{
+                        document.querySelector("#teaminfo .address").textContent = ""
+                        document.querySelector("#teaminfo .start").textContent = ""
+                        document.querySelector("#teaminfo .end").textContent = ""
+                    }
+                }else{
+                    document.querySelector("#teaminfo .name").textContent = x.detail
+                }
+            })
+        }).catch(function(res){ console.log(res);alert("network error") })
+    }
+    function login(){
+        const token = document.querySelector("#team_token").value
+        fetch("/api/login", {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: "POST",
+            credentials:"include",
+            body: JSON.stringify({token})
+        }).then(function(res){
+            res.json().then(x => {
+                if(res.ok){
+                    info()
+                }else {
+                    alert(x.detail)
+                }
+            })
+        }).catch(function(res){ console.log(res);alert("network error") })
+    }
+    function apply_container(){
+        const flag = document.querySelector("#flag").value
+        fetch("/api/apply_container", {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: "POST",
+            credentials:"include"
+        }).then(function(res){
+            res.json().then(x => {
+                if(res.ok){
+                    alert("success")
+                    info()
+                }else {
+                    alert(x.detail)
+                }
+            })
+        })
+        .catch(function(res){ console.log(res);alert("network error") })
+    }
+    function remove_container(){
+        const flag = document.querySelector("#flag").value
+        fetch("/api/remove_container", {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: "POST",
+            credentials:"include"
+        }).then(function(res){
+            res.json().then(x => {
+                if(res.ok){
+                    alert(x.message)
+                    info()
+                }else {
+                    alert(x.detail)
+                }
+            })
+        })
+        .catch(function(res){ console.log(res);alert("network error") })
+    }
+    function submit_flag(){
+        const flag = document.querySelector("#flag").value
+        fetch("/api/submit_flag", {
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            method: "POST",
+            credentials:"include",
+            body: JSON.stringify({flag})
+        }).then(function(res){
+            res.json().then(x => {
+                if(res.ok){
+                    document.querySelector("#real_flag").textContent = x.message
+                    alert(x.message)
+                }else {
+                    alert(x.detail)
+                }
+            })
+        })
+        .catch(function(res){ console.log(res);alert("network error") })
+    }
+    info()
+</script>
+</body>
+</html>

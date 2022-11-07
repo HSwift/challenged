@@ -1,0 +1,18 @@
+version: '2'
+services:
+  platform:
+    ports:
+      - "0.0.0.0:80:80"
+    restart: unless-stopped
+    build: .
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=challenged
+      - MYSQL_ROOT_PASSWORD=aa9c5ddcebe27038
+      - MYSQL_USER=app
+      - MYSQL_PASSWORD=aa9c5ddcebe27038
+    command: --default-authentication-plugin=mysql_native_password
